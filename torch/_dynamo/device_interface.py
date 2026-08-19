@@ -157,23 +157,6 @@ class DeviceInterface:
         """
         return False
 
-    @staticmethod
-    def is_gpu() -> bool:
-        """Return True if Inductor should treat this device as a GPU-class
-        accelerator (device guards, GPU codegen/fusion, cudagraph
-        eligibility).  Defaults to False so that unknown backends are
-        conservatively treated as non-GPU until they explicitly opt in."""
-        return False
-
-    @classmethod
-    def exposes_streams(cls) -> bool:
-        """Return True if this device exposes a stream abstraction.
-        Derived from whether the ``Stream`` slot has been overridden by a
-        subclass -- backends with a real Stream implementation (CUDA, XPU,
-        MTIA) automatically get True; backends that inherit the placeholder
-        (MPS) automatically get False."""
-        return cls.Stream is not DeviceInterface.Stream
-
     @classmethod
     def get_multi_processor_count(cls, device: torch.types.Device = None) -> int:
         """Return the number of compute units, used for occupancy /
@@ -304,10 +287,6 @@ class CudaInterface(DeviceInterface):
         return torch.cuda.is_available()
 
     @staticmethod
-    def is_gpu() -> bool:
-        return True
-
-    @staticmethod
     def get_compute_capability(device: torch.types.Device = None) -> int | str:
         if torch.version.hip is None:
             major, min = torch.cuda.get_device_capability(device)
@@ -412,10 +391,6 @@ class MtiaInterface(DeviceInterface):
         ret = torch.mtia.is_available()
         return ret
 
-    @staticmethod
-    def is_gpu() -> bool:
-        return True
-
     @classmethod
     def get_multi_processor_count(cls, device: torch.types.Device = None) -> int:
         return 64
@@ -505,10 +480,6 @@ class XpuInterface(DeviceInterface):
     def is_available() -> bool:
         return torch.xpu.is_available()
 
-    @staticmethod
-    def is_gpu() -> bool:
-        return True
-
     @classmethod
     def get_multi_processor_count(cls, device: torch.types.Device = None) -> int:
         return cls.get_device_properties(device).gpu_subslice_count
@@ -589,10 +560,6 @@ class CpuInterface(DeviceInterface):
         pass
 
     @staticmethod
-    def is_gpu() -> bool:
-        return False
-
-    @staticmethod
     def is_triton_capable(device: torch.types.Device = None) -> bool:
         return True
 
@@ -622,10 +589,6 @@ class MpsInterface(DeviceInterface):
     @staticmethod
     def is_available() -> bool:
         return torch.backends.mps.is_available()
-
-    @staticmethod
-    def is_gpu() -> bool:
-        return True
 
     @staticmethod
     def current_device() -> int:
@@ -672,10 +635,6 @@ class TpuInterface(DeviceInterface):
     @staticmethod
     def is_available() -> bool:
         return has_torch_tpu()
-
-    @staticmethod
-    def is_gpu() -> bool:
-        return False
 
     @staticmethod
     def current_device() -> int:
